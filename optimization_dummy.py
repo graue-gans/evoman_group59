@@ -17,6 +17,7 @@ import os
 
 #import deap and random
 import random
+import matplotlib.pyplot as plt
 
 from deap import base, creator, tools, algorithms
 
@@ -55,12 +56,21 @@ def main():
 
     env.state_to_log()
 
+
+
     # number of weights for multilayer with 10 hidden neurons
     n_vars = (env.get_num_sensors()+1)*n_hidden_neurons + (n_hidden_neurons+1)*5
 
+    # Parameters for evolutionary algorithm
+
     dom_l = -1
     dom_u = 1
-    npop = 5
+    npop = 20
+    cx_prob = 0.8  # Probability of mating (crossover)
+    mut_prob = 0.02  # Probability of mutating
+    n_generations = 10  # Number of generations
+    tournsize = 5
+
 
     pop = np.random.uniform(dom_l, dom_u, (npop, n_vars))
 
@@ -88,30 +98,47 @@ def main():
 
     # Register the crossover and mutation functions
     toolbox.register("mate", tools.cxTwoPoint)  # Two-point crossover
-    toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=1, indpb=0.1)  # Gaussian mutation
-    toolbox.register("select", tools.selTournament, tournsize=3)  # Tournament selec
+    toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=1, indpb=0.05)  # Gaussian mutation
+    toolbox.register("select", tools.selTournament, tournsize=tournsize)  # Tournament selec
 
-    random.seed(42)
+    random.seed(43) #43 shows a nice graph
+
+    # Add statistics
+    stats = tools.Statistics(key=lambda ind: ind.fitness.values)
+    stats.register("avg", np.mean)
+    stats.register("std", np.std)
+    stats.register("min", np.min)
+    stats.register("max", np.max)
+
+    # Logbook to track the stats
+    logbook = tools.Logbook()
+    logbook.header = ["gen", "nevals"] + stats.fields
 
     # Create initial population
-    population = toolbox.population(n=5)
-
-    # Parameters for evolutionary algorithm
-    cx_prob = 0.5  # Probability of mating (crossover)
-    mut_prob = 0.2  # Probability of mutating
-    n_generations = 10  # Number of generations
+    population = toolbox.population(npop)
 
     # Evaluate the entire population
     fitnesses = list(map(toolbox.evaluate, population))
     for ind, fit in zip(population, fitnesses):
         ind.fitness.values = fit
 
+    # Record statistics for the initial population
+    record = stats.compile(population)
+    logbook.record(gen=0, nevals=len(population), **record)
+    print(logbook.stream)
+
+
     # Evolutionary algorithm
     for gen in range(n_generations):
-        print(f"Generation {gen}")
+#        print(f"Generation {gen}")
 
         # Select individuals for the next generation
-        offspring = toolbox.select(population, len(population))
+        offspring = toolbox.select(population, len(population)-1)
+        offspring = list(map(toolbox.clone, offspring))
+
+
+        # ** Elitism **: Keep the best individual from the current population
+        best_individual = tools.selBest(population, k=1)[0]  # Select the best individual
         offspring = list(map(toolbox.clone, offspring))
 
         # Apply crossover and mutation
@@ -132,22 +159,48 @@ def main():
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
 
+        #elitesism check spelling
+        offspring.append(best_individual)  # Add the best individual to the offspring
+
         # Replace the old population with the new one
         population[:] = offspring
 
         # Gather and print the best fitness in the population
         fits = [ind.fitness.values[0] for ind in population]
         best_fitness = max(fits)
-        print(f"Best fitness: {best_fitness}")
+#        print(f"Best fitness: {best_fitness}")
+
+        # Compile the statistics for this generation and record them
+        record = stats.compile(population)
+        logbook.record(gen=gen, nevals=len(invalid_ind), **record)
+        print(logbook.stream)
 
         current_best_individual = population[fits.index(best_fitness)]
 
-    print(current_best_individual)
+    # Plot the fitness values over generations
+    gen = logbook.select("gen")
+    avg = logbook.select("avg")
+    std = logbook.select("std")
+    min_fitness = logbook.select("min")
+    max_fitness = logbook.select("max")
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(gen, avg, label="Average Fitness")
+    plt.fill_between(gen, np.array(avg) - np.array(std), np.array(avg) + np.array(std), alpha=0.2, label="Standard Deviation")
+    plt.plot(gen, min_fitness, label="Minimum Fitness", color="red")
+    plt.plot(gen, max_fitness, label="Maximum Fitness", color="green")
+    plt.xlabel("Generation")
+    plt.ylabel("Fitness")
+    plt.title("Fitness Evolution Over Generations")
+    plt.legend(loc="best")
+    plt.grid(True)
+    plt.show()
+
 
 
 
     # start writing your own code from here
 
 
-if _name_ == '_main_':
+if __name__ == '__main__':
     main()
