@@ -42,7 +42,18 @@ def main():
     if not os.path.exists(experiment_name):
         os.makedirs(experiment_name)
 
+    # Parameters for evolutionary algorithm
     n_hidden_neurons = 10
+    dom_l = -1
+    dom_u = 1
+    npop = 20
+    cx_prob = 0.8  # Probability of mating (crossover)
+    mut_prob = 0.02  # Probability of mutating
+    n_generations = 10  # Number of generations
+    tournsize = 5
+
+    random.seed(43) #43 shows a nice graph
+
 
     # initializes simulation in individual evolution mode, for single static enemy.
     env = Environment(experiment_name=experiment_name,
@@ -54,25 +65,18 @@ def main():
                     speed="fastest",
                     visuals=True)
 
+    # Deap only works with evaluation of an individual
+    # Cant putt this between other functions because local variable env cant be passed with Deap
+    def evaluate_individual(individual):
+        fitness = env.play(pcont=np.array(individual))[0]  # Fitness is the first return value of play
+        return fitness,
+
     env.state_to_log()
 
-
-
     # number of weights for multilayer with 10 hidden neurons
-    n_vars = (env.get_num_sensors()+1)*n_hidden_neurons + (n_hidden_neurons+1)*5
+    n_vars = (env.get_num_sensors() + 1) * n_hidden_neurons + (n_hidden_neurons + 1) * 5
 
-    # Parameters for evolutionary algorithm
-
-    dom_l = -1
-    dom_u = 1
-    npop = 20
-    cx_prob = 0.8  # Probability of mating (crossover)
-    mut_prob = 0.02  # Probability of mutating
-    n_generations = 10  # Number of generations
-    tournsize = 5
-
-
-    pop = np.random.uniform(dom_l, dom_u, (npop, n_vars))
+    #   pop = np.random.uniform(dom_l, dom_u, (npop, n_vars))
 
     # Create Fitness and Individual classes using DEAP
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))  # Maximize fitness
@@ -82,16 +86,11 @@ def main():
     toolbox = base.Toolbox()
 
     # Attribute generator: Creates random values for each individual in the population
-    toolbox.register("attr_float", random.uniform, -1, 1)
+    toolbox.register("attr_float", random.uniform, dom_l, dom_u)
 
     # Structure initializers: Define the individual and population structure
     toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.attr_float, n=n_vars)
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
-
-    # Fitness function: Evaluate the individual in the environment
-    def evaluate_individual(individual):
-        fitness = env.play(pcont=np.array(individual))[0]  # Fitness is the first return value from play
-        return fitness,
 
     # Register the fitness evaluation function
     toolbox.register("evaluate", evaluate_individual)
@@ -101,7 +100,7 @@ def main():
     toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=1, indpb=0.05)  # Gaussian mutation
     toolbox.register("select", tools.selTournament, tournsize=tournsize)  # Tournament selec
 
-    random.seed(43) #43 shows a nice graph
+
 
     # Add statistics
     stats = tools.Statistics(key=lambda ind: ind.fitness.values)
