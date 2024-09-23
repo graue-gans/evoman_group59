@@ -50,14 +50,14 @@ def main():
     n_hidden_neurons = 10
     dom_l = -1
     dom_u = 1
-    npop = 100
+    npop = 30
     cx_prob = 0.7  # Probability of mating (crossover)
     mut_prob = 0.05  # Probability of mutating
-    n_generations = 20  # Number of generations
+    n_generations = 50  # Number of generations
     tournsize = 2
 
 
-    run_times = 10
+    run_times = 5
     program_name = "run_solution"
 
  #   random.seed(43) #43 shows a nice graph
@@ -126,6 +126,8 @@ def main():
         print(f"The best solutions fitness is {best_fitness_all} and has been saved")
 
         # Calculates the total avg and std
+        std_mac_fitness = np.std(all_max_fitness, axis=0)
+
         avg_fitness_across_runs = np.mean(all_avg_fitness, axis=0)
         std_fitness_across_runs = np.mean(all_std_fitness, axis=0)
         max_fitness_across_runs = np.mean(all_max_fitness, axis=0)
@@ -135,8 +137,9 @@ def main():
         generations = list(range(n_generations))
         plt.figure(figsize=(10, 6))
         plt.plot(generations, avg_fitness_across_runs, label="Average Fitness")
-        plt.plot(generations, max_fitness_across_runs, label="Max Fitness")
         plt.fill_between(generations, avg_fitness_across_runs - std_fitness_across_runs, avg_fitness_across_runs + std_fitness_across_runs, alpha=0.2, label="Standard Deviation")
+        plt.plot(generations, max_fitness_across_runs, label="Max Fitness")
+        plt.fill_between(generations, max_fitness_across_runs - std_mac_fitness, max_fitness_across_runs + std_mac_fitness, alpha=0.2, label="Standard Deviation Fitness")
         plt.xlabel("Generation")
         plt.ylabel("Fitness")
         plt.title("Fitness over 10 runs")
@@ -194,7 +197,11 @@ def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_gener
 
     # Register the crossover and mutation functions
     toolbox.register("mate", tools.cxTwoPoint)  # Two-point crossover
-    toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=1, indpb=0.05)  # Gaussian mutation
+  #  toolbox.register("mate", tools.cxBlend, alpha=0.5)  # Two-point crossover
+
+    toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=1, indpb=mut_prob)  # Gaussian mutation
+  #  toolbox.register("mutate", tools.mutShuffleIndexes, indpb=0.05)  # Gaussian mutation
+
     toolbox.register("select", tools.selTournament, tournsize=tournsize)  # Tournament selec
 
     # Add statistics
@@ -252,7 +259,7 @@ def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_gener
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
 
-        #elitesism check spelling
+        #elitesism #FIXME check spelling
         offspring.append(best_individual)  # Add the best individual to the offspring
 
         # Replace the old population with the new one
@@ -273,11 +280,6 @@ def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_gener
     return logbook, current_best_individual, best_fitness
 
 
-
-
-
-
-    # start writing your own code from here
 
 
 if __name__ == '__main__':
