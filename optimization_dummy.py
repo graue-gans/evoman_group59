@@ -14,8 +14,6 @@ from demo_controller import player_controller
 # imports other libs
 import numpy as np
 import os
-
-#import deap and random
 import random
 import matplotlib.pyplot as plt
 
@@ -25,7 +23,7 @@ from deap import base, creator, tools, algorithms
 def simulation(env,x):
     f,p,e,t = env.play(pcont=x)
     return f
-
+# evaluation for the induvidual because of deap
 def simulation_indu(env,x):
     f,p,e,t = env.play(pcont=x)
     return f,p,e,t
@@ -56,9 +54,9 @@ def main():
     n_generations = 50  # Number of generations
     tournsize = 2
 
-
+    # program options
     run_times = 5
-    program_name = "run_solution"
+    program_name = "run_solution_3"
 
  #   random.seed(43) #43 shows a nice graph
 
@@ -76,11 +74,11 @@ def main():
 
     env.state_to_log()
 
-    # Running the
+    # running the ea one time with graphs
     if program_name == "test_single":
         logbook = run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize)
 
-        # Plot the fitness values over generations
+        # plot the fitness  over generations
         gen = logbook.select("gen")
         avg = logbook.select("avg")
         std = logbook.select("std")
@@ -99,17 +97,17 @@ def main():
         plt.grid(True)
         plt.show()
 
-    # Running the ea run_times and mapping the avg en std in a graph
+    # running the ea run_times and mapping the avg en std in a graph
     elif program_name == "run_experiment":
 
-        # Make empty arrays
+        # make empty arrays
         all_avg_fitness = np.zeros((run_times, n_generations))
         all_std_fitness = np.zeros((run_times, n_generations))
         all_max_fitness = np.zeros((run_times, n_generations))
         best_fitness_all = 0
 
 
-        # Runs ea run_times times
+        # runs ea run_times times
         for run in range(run_times):
             print(f"Running simulation {run + 1}/{run_times}")
             logbook, current_best_individual, best_fitness= run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize)
@@ -125,7 +123,7 @@ def main():
         np.savetxt(experiment_name + '/best.txt', best_individual)
         print(f"The best solutions fitness is {best_fitness_all} and has been saved")
 
-        # Calculates the total avg and std
+        # calculates the total avg and std
         std_mac_fitness = np.std(all_max_fitness, axis=0)
 
         avg_fitness_across_runs = np.mean(all_avg_fitness, axis=0)
@@ -133,7 +131,7 @@ def main():
         max_fitness_across_runs = np.mean(all_max_fitness, axis=0)
 
 
-        # Plot the avg and std
+        # plot the avg and std
         generations = list(range(n_generations))
         plt.figure(figsize=(10, 6))
         plt.plot(generations, avg_fitness_across_runs, label="Average Fitness")
@@ -142,7 +140,7 @@ def main():
         plt.fill_between(generations, max_fitness_across_runs - std_mac_fitness, max_fitness_across_runs + std_mac_fitness, alpha=0.2, label="Standard Deviation Fitness")
         plt.xlabel("Generation")
         plt.ylabel("Fitness")
-        plt.title("Fitness over 10 runs")
+        plt.title(f"Fitness over {run_times} runs")
         plt.legend(loc="best")
         plt.grid(True)
         plt.show()
@@ -160,6 +158,23 @@ def main():
 
         sys.exit(0)
 
+    # run the best found solution in the previous experiment, for 3 games
+    # IMPORTANT to run graphics set HEADLESS to FALSE
+    elif program_name == "run_solution_3":
+        bsol = np.loadtxt(experiment_name + '/best.txt')
+        print('\n RUNNING SAVED BEST SOLUTION 3 EXPERIMENTS\n')
+        env.update_parameter('speed', 'normal')
+        levellist = [7,3,4]
+        for i in levellist:
+            env.update_parameter('enemies', [i])
+
+            fitness, playerlife, enemylife, gameruntime = simulation_indu(env, bsol)
+
+            print(f"level: {i} \nfitness: {fitness} \nplayerlife: {playerlife}\nenemylife: {enemylife}\ngameruntime: {gameruntime}")
+
+        sys.exit(0)
+
+
 
     else:
         print(f"Program '{program_name}' not found")
@@ -167,8 +182,8 @@ def main():
 
 def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize):
 
-    # Deap only works with evaluation of an individual
-    # Cant putt this between other functions because local variable env cant be passed with Deap
+    # deap only works with evaluation of an individual
+    # cant putt this between other functions because local variable env cant be passed with Deap
     def evaluate_individual(individual):
         fitness = env.play(pcont=np.array(individual))[0]  # Fitness is the first return value of play
         return fitness,
@@ -182,20 +197,17 @@ def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_gener
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))  # Maximize fitness
     creator.create("Individual", list, fitness=creator.FitnessMax)
 
-    # Create DEAP toolbox
     toolbox = base.Toolbox()
 
-    # Attribute generator: Creates random values for each individual in the population
+    # make population
     toolbox.register("attr_float", random.uniform, dom_l, dom_u)
-
-    # Structure initializers: Define the individual and population structure
     toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.attr_float, n=n_vars)
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
-    # Register the fitness evaluation function
+    # register evaluation function
     toolbox.register("evaluate", evaluate_individual)
 
-    # Register the crossover and mutation functions
+    # register the crossover and mutation functions
     toolbox.register("mate", tools.cxTwoPoint)  # Two-point crossover
   #  toolbox.register("mate", tools.cxBlend, alpha=0.5)  # Two-point crossover
 
@@ -204,44 +216,43 @@ def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_gener
 
     toolbox.register("select", tools.selTournament, tournsize=tournsize)  # Tournament selec
 
-    # Add statistics
+    # add logging
     stats = tools.Statistics(key=lambda ind: ind.fitness.values)
     stats.register("avg", np.mean)
     stats.register("std", np.std)
     stats.register("min", np.min)
     stats.register("max", np.max)
 
-    # Logbook to track the stats
     logbook = tools.Logbook()
     logbook.header = ["gen", "nevals"] + stats.fields
 
-    # Create initial population
+    # create initial population
     population = toolbox.population(npop)
 
-    # Evaluate the entire population
+    # evaluate the initial population
     fitnesses = list(map(toolbox.evaluate, population))
     for ind, fit in zip(population, fitnesses):
         ind.fitness.values = fit
 
-    # Record statistics for the initial population
+    # log
     record = stats.compile(population)
     logbook.record(gen=0, nevals=len(population), **record)
     print(logbook.stream)
 
-    # Evolutionary algorithm
+    # evolutionary algorithm
     for gen in range(1, n_generations):
 #        print(f"Generation {gen}")
 
-        # Select individuals for the next generation
+        # Select offspring
         offspring = toolbox.select(population, len(population)-1)
         offspring = list(map(toolbox.clone, offspring))
 
 
-        # ** Elitism **: Keep the best individual from the current population
+        # elitism
         best_individual = tools.selBest(population, k=1)[0]  # Select the best individual
         offspring = list(map(toolbox.clone, offspring))
 
-        # Apply crossover and mutation
+        # crossover and mutation
         for child1, child2 in zip(offspring[::2], offspring[1::2]):
             if random.random() < cx_prob:
                 toolbox.mate(child1, child2)
@@ -253,24 +264,24 @@ def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_gener
                 toolbox.mutate(mutant)
                 del mutant.fitness.values
 
-        # Evaluate the new individuals (only those with no fitness values)
+        # evaluate if no fitness
         invalid_ind = [ind for ind   in offspring if not ind.fitness.valid]
         fitnesses = map(toolbox.evaluate, invalid_ind)
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
 
-        #elitesism #FIXME check spelling
+        # elitism
         offspring.append(best_individual)  # Add the best individual to the offspring
 
-        # Replace the old population with the new one
+        # replace the old population with new
         population[:] = offspring
 
-        # Gather and print the best fitness in the population
+        # gather and print the best fitness in the population
         fits = [ind.fitness.values[0] for ind in population]
         best_fitness = max(fits)
 #        print(f"Best fitness: {best_fitness}")
 
-        # Compile the statistics for this generation and record them
+        # log
         record = stats.compile(population)
         logbook.record(gen=gen, nevals=len(invalid_ind), **record)
         print(logbook.stream)
