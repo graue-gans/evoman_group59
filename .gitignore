@@ -218,3 +218,6 @@ fabric.properties
 
 # virtual environment
 venv/
+
+# ignore the whole .idea directory
+.idea/
