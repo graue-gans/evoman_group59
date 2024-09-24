@@ -49,3 +49,9 @@ save logs: yes
 ########## Simulation state - END ###########
 
 PARAMETER CHANGE: speed = normal
+
+PARAMETER CHANGE: enemies = [7]
+
+PARAMETER CHANGE: enemies = [3]
+
+PARAMETER CHANGE: enemies = [4]
