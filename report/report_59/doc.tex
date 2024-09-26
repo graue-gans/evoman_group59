@@ -3,34 +3,38 @@
 
 %\usepackage{booktabs} % For formal tables
 
-
-% Copyright
-%\setcopyright{none}
-%\setcopyright{acmcopyright}
-%\setcopyright{acmlicensed}
-\setcopyright{rightsretained}
-%\setcopyright{usgov}
-%\setcopyright{usgovmixed}
-%\setcopyright{cagov}
-%\setcopyright{cagovmixed}
-
 \begin{document}
-\title{Title tbd}
-%\titlenote{Produces the permission block, and copyright information}
+
+% Title page information
+\begin{titlepage}
+    \centering
+    \vspace*{1cm}
+
+    \Huge
+    \textbf{TITLE tbd}
+
+    \vspace{0.5cm}
+    \LARGE
+    Evolutionary Computing
+
+    \vspace{1.5cm}
+    Standard Assignment 1: Specialist Agent \\ \\
+    Group 59
+
+    \vspace{1.5cm}
+    Max Kehrer (Student ID)\\
+    Alejandro Pascual Pintado (Student ID)\\
+    Nadja Spannowsky (Student ID)\\
+    Mees Wesseling (Student ID)
+
+    \vspace{1.5cm}
+    \today
+
+    \vfill
+\end{titlepage}
+
+\title{TITLE TBD}
 \subtitle{Subtitle if necessary}
-%\subtitlenote{The full version of the author's guide is available as \texttt{acmart.pdf} document}
-
-\author{Max Kehrer}
-%\email{trovato@corporation.com}
-
-\author{Alejandro Pascual Pintado}
-%\email{webmaster@marysville-ohio.com}
-
-\author{Nadja Spannowsky}
-%\email{larst@affiliation.org}
-
-\author{Mees Wesseling}
-%\email{cpalmer@prl.com}
 
 \begin{abstract}
 We can add an abstract, but we do not have to.
@@ -39,9 +43,13 @@ We can add an abstract, but we do not have to.
 \keywords{usually 2-3 keywords}
 
 \maketitle
+
 \input{body59}
 
+% Move references to a new page
+\clearpage
 \bibliographystyle{ACM-Reference-Format}
-\bibliography{sample-bibliography}
+%\bibliographystyle{plain}
+\bibliography{bibliography59}
 
 \end{document}
