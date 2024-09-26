@@ -35,7 +35,7 @@ def evaluate(env, x):
 
 def main():
     # choose this for not using visuals and thus making experiments faster
-    headless = False
+    headless = True
     if headless:
         os.environ["SDL_VIDEODRIVER"] = "dummy"
 
@@ -48,35 +48,36 @@ def main():
     n_hidden_neurons = 10
     dom_l = -1
     dom_u = 1
-    npop = 30
+    npop = 40 #50
     cx_prob = 0.7  # Probability of mating (crossover)
-    mut_prob = 0.05  # Probability of mutating
-    n_generations = 50  # Number of generations
-    tournsize = 2
+    mut_prob = 0.1  # Probability of mutating
+    n_generations = 20  # Number of generations 50
+    tournsize = 3
+    sigma_gausian = 0.3
 
     # program options
-    run_times = 5
-    program_name = "run_solution_3"
+    run_times = 10
+    program_name = "run_experiment"
 
  #   random.seed(43) #43 shows a nice graph
 
 
     # initializes simulation in individual evolution mode, for single static enemy.
     env = Environment(experiment_name=experiment_name,
-                    enemies=[2],
+                    enemies=[8],
                     playermode="ai",
                     player_controller=player_controller(n_hidden_neurons), # you  can insert your own controller here
                     enemymode="static",
                     level=2,
                     speed="fastest",
-                    visuals=True)
+                    visuals=False)
 
 
     env.state_to_log()
 
     # running the ea one time with graphs
     if program_name == "test_single":
-        logbook = run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize)
+        logbook = run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize, sigma_gausian)
 
         # plot the fitness  over generations
         gen = logbook.select("gen")
@@ -110,7 +111,7 @@ def main():
         # runs ea run_times times
         for run in range(run_times):
             print(f"Running simulation {run + 1}/{run_times}")
-            logbook, current_best_individual, best_fitness= run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize)
+            logbook, current_best_individual, best_fitness= run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize, sigma_gausian)
             if best_fitness > best_fitness_all:
                 best_fitness_all = best_fitness
                 best_individual = current_best_individual
@@ -125,11 +126,12 @@ def main():
 
         # calculates the total avg and std
         std_mac_fitness = np.std(all_max_fitness, axis=0)
-
+        max_fitness_across_runs = np.mean(all_max_fitness, axis=0)
         avg_fitness_across_runs = np.mean(all_avg_fitness, axis=0)
         std_fitness_across_runs = np.mean(all_std_fitness, axis=0)
-        max_fitness_across_runs = np.mean(all_max_fitness, axis=0)
 
+        #logs files
+        np.savez(experiment_name + '/logs1.npz', std_fitness=std_mac_fitness, max_fitness=max_fitness_across_runs, avg_fitness=avg_fitness_across_runs, std_avg_fitness=std_fitness_across_runs)
 
         # plot the avg and std
         generations = list(range(n_generations))
@@ -164,7 +166,7 @@ def main():
         bsol = np.loadtxt(experiment_name + '/best.txt')
         print('\n RUNNING SAVED BEST SOLUTION 3 EXPERIMENTS\n')
         env.update_parameter('speed', 'normal')
-        levellist = [7,3,4]
+        levellist = [1,2,3,4,5,6,7,8]
         for i in levellist:
             env.update_parameter('enemies', [i])
 
@@ -180,7 +182,7 @@ def main():
         print(f"Program '{program_name}' not found")
 
 
-def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize):
+def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize, sigma_gausian):
 
     # deap only works with evaluation of an individual
     # cant putt this between other functions because local variable env cant be passed with Deap
@@ -208,10 +210,10 @@ def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_gener
     toolbox.register("evaluate", evaluate_individual)
 
     # register the crossover and mutation functions
-    toolbox.register("mate", tools.cxTwoPoint)  # Two-point crossover
-  #  toolbox.register("mate", tools.cxBlend, alpha=0.5)  # Two-point crossover
+  #  toolbox.register("mate", tools.cxTwoPoint)  # Two-point crossover
+    toolbox.register("mate", tools.cxBlend, alpha=0.8)  # Two-point crossover
 
-    toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=1, indpb=mut_prob)  # Gaussian mutation
+    toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=sigma_gausian, indpb=mut_prob)  # Gaussian mutation
   #  toolbox.register("mutate", tools.mutShuffleIndexes, indpb=0.05)  # Gaussian mutation
 
     toolbox.register("select", tools.selTournament, tournsize=tournsize)  # Tournament selec

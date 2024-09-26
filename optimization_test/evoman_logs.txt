@@ -14,9 +14,9 @@ MESSAGE: Pygame initialized for simulation.
 
 multiple mode: no
 
-enemies list: 2
+enemies list: 8
 
-current enemy: 2
+current enemy: 8
 
 player mode: ai
 
@@ -47,11 +47,3 @@ logs: on
 save logs: yes
 
 ########## Simulation state - END ###########
-
-PARAMETER CHANGE: speed = normal
-
-PARAMETER CHANGE: enemies = [7]
-
-PARAMETER CHANGE: enemies = [3]
-
-PARAMETER CHANGE: enemies = [4]
