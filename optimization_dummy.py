@@ -40,7 +40,7 @@ def main():
         os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 
-    experiment_name = 'optimization_test'
+    experiment_name = 'blend_7'
     if not os.path.exists(experiment_name):
         os.makedirs(experiment_name)
 
@@ -48,10 +48,10 @@ def main():
     n_hidden_neurons = 10
     dom_l = -1
     dom_u = 1
-    npop = 40 #50
+    npop = 100 #50
     cx_prob = 0.7  # Probability of mating (crossover)
-    mut_prob = 0.1  # Probability of mutating
-    n_generations = 20  # Number of generations 50
+    mut_prob = 0.05  # Probability of mutating
+    n_generations = 50  # Number of generations 50
     tournsize = 3
     sigma_gausian = 0.3
 
@@ -64,13 +64,14 @@ def main():
 
     # initializes simulation in individual evolution mode, for single static enemy.
     env = Environment(experiment_name=experiment_name,
-                    enemies=[8],
+                    enemies=[7],
                     playermode="ai",
                     player_controller=player_controller(n_hidden_neurons), # you  can insert your own controller here
                     enemymode="static",
                     level=2,
                     speed="fastest",
-                    visuals=False)
+                    visuals=False,
+                    randomini="yes")
 
 
     env.state_to_log()
@@ -160,6 +161,17 @@ def main():
 
         sys.exit(0)
 
+    elif program_name == "run_solution_5_times":
+        bsol = np.loadtxt(experiment_name + '/best.txt')
+        print('\n RUNNING SAVED BEST SOLUTION \n')
+        env.update_parameter('randomini', 'yes')
+
+        for i in range(5):
+            fitness, playerlife, enemylife, gameruntime = simulation_indu(env, bsol)
+            print(f"individual gain is:{playerlife-enemylife}")
+
+        sys.exit(0)
+
     # run the best found solution in the previous experiment, for 3 games
     # IMPORTANT to run graphics set HEADLESS to FALSE
     elif program_name == "run_solution_3":
@@ -210,7 +222,7 @@ def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_gener
     toolbox.register("evaluate", evaluate_individual)
 
     # register the crossover and mutation functions
-  #  toolbox.register("mate", tools.cxTwoPoint)  # Two-point crossover
+   # toolbox.register("mate", tools.cxTwoPoint)  # Two-point crossover
     toolbox.register("mate", tools.cxBlend, alpha=0.8)  # Two-point crossover
 
     toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=sigma_gausian, indpb=mut_prob)  # Gaussian mutation

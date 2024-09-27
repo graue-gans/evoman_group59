@@ -28,7 +28,7 @@ clock precision: low
 
 inputs coded: no
 
-random initialization: no
+random initialization: yes
 
 expiration time: 3000
 
@@ -47,5 +47,3 @@ logs: on
 save logs: yes
 
 ########## Simulation state - END ###########
-
-PARAMETER CHANGE: randomini = yes
