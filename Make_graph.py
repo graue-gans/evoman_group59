@@ -1,8 +1,6 @@
-from cProfile import label
-
 import numpy as np
 import matplotlib.pyplot as plt
-from deap.gp import generate
+
 
 # Load data from logs
 dir_name = 'optimization_test'
@@ -42,7 +40,7 @@ plt.fill_between(generations, data_blendx['avg_fitness'] - data_blendx['std_avg_
 
 # Add labels and legend (title is added in latex)
 plt.xlabel('Generation')
-plt.ylabel('Fitness Metrics')
+plt.ylabel('Fitness')
 # plt.title('Comparison of Fitness Metrics with Shaded Standard Deviation for EA1 and EA2')
 plt.legend(loc='best', fontsize=8)
 
