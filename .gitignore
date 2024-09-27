@@ -221,3 +221,6 @@ venv/
 
 # ignore the whole .idea directory
 .idea/
+
+# ignore mac system files
+.DS_Store
