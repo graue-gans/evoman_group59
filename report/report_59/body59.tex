@@ -2,14 +2,14 @@
 %%https://docs.google.com/document/d/16clK-npH8XWA7p_llKXXWScyVuvJ1bjQ9kDyP1jmniw/edit?usp=sharing
 
 \section{Introduction}\label{sec:introduction}
-In recent years, Evolutionary Algorithms (EAs) have become increasingly prominent in training agents within complex environments, particularly in areas such as video game AI (lucas2006evolutionary).
-Video games serve as ideal testing grounds for EA research, as they are characterized by dynamic, non-linear challenges and uncertainties, such as unpredictable enemies (togelius2007computational, togelius2009super).
-These qualities need adaptive and robust solutions, often making traditional optimization methods less effective due to high-dimensional search spaces and non-stationary conditions (yannakakis2018AIgames).
+In recent years, Evolutionary Algorithms (EAs) have become increasingly prominent in training agents within complex environments, particularly in areas such as video game AI \cite{lucas2006evolutionary}.
+Video games serve as ideal testing grounds for EA research, as they are characterized by dynamic, non-linear challenges and uncertainties, such as unpredictable enemies \cite{togelius2007computational, togelius2009super}.
+These qualities need adaptive and robust solutions, often making traditional optimization methods less effective due to high-dimensional search spaces and non-stationary conditions \cite{yannakakis2018AIgames}.
 By continuously interacting with the environment, agents trained via EAs can learn to navigate and adapt to the evolving challenges posed by these complex environments.
 
-EAs are inspired by the principles of natural selection and biological evolution, where solutions evolve over successive generations using key genetic operators such as selection, crossover (also known as recombination), and mutation (eiben2015bookEA).
+EAs are inspired by the principles of natural selection and biological evolution, where solutions evolve over successive generations using key genetic operators such as selection, crossover (also known as recombination), and mutation \cite{eiben2015bookEA}.
 These operators are essential, as they allow for the exploration and exploitation of the solution space in search of optimal solutions.
-Among them, crossover and mutation are the most critical as they both contribute to genetic diversity (luke1997comparison).
+Among them, crossover and mutation are the most critical as they both contribute to genetic diversity \cite{luke1997comparison}.
 
 Crossover, which combines genetic material from parent solutions to generate offspring, is important for exchanging successful traits between individuals in the population.
 This mechanism plays a critical role in promoting the discovery of high-performing solutions by allowing favourable traits to propagate and combine in new ways.
@@ -17,30 +17,24 @@ In contrast, mutation introduces random changes to individual solutions, ensurin
 While mutation is essential for maintaining variability within the population, it typically results in incremental changes (particularly in larger populations), often refining rather than drastically improving solutions (luke1997comparison).
 Given the complexity of dynamic environments, crossover plays an important role in driving the rapid improvement of solutions, creating offspring that inherit the most effective traits from different individuals, and is therefore manipulated in this study.
 
-This study focuses on two specific crossover operators within an EA framework for training specialist agents: Blend Crossover and Two-Point Crossover.
-Blend Crossover creates offspring by producing a weighted blend of parental genes, potentially encouraging broader exploration of the solution space.
-Two-point crossover swaps segments of genetic material between two parent solutions at two points potentially leading to more targeted exploitation of high-performing solutions.
-
 \subsection{Research Question and Hypotheses}
 The primary objective of this study is to evaluate the effects of these two crossover operators on the performance and convergence characteristics of an EA in training a specialist agent.
 This leads us to the following research question:
 
-What is the impact of BLEND and TWO-POINT crossover operators on the convergence and performance of an Evolutionary Algorithm in training a specialist agent in a video game playing python framework?
+\textit{What is the impact of BLEND and TWO-POINT crossover operators on the convergence and performance of an Evolutionary Algorithm in training a specialist agent in a video game playing python framework?}
 
-\begin{itemize}
-\item Hypothesis 1: The Blend Crossover operator will demonstrate a slower convergence rate compared to the Two-Point Crossover operator, due to its greater exploration of the solution space. In contrast, the Two-Point operator will demonstrate a faster convergence rate compared to Blend Crossover due to its more exploitative nature.
-\item Hypothesis 2: Specialist agents evolved using the Blend Crossover operator will achieve higher performance compared to those evolved using the Two-Point crossover operator.
-\end{itemize}
+\paragraph{Hypothesis 1}
+The Blend Crossover operator will demonstrate a slower convergence rate compared to the Two-Point Crossover operator, due to its greater exploration of the solution space. In contrast, the Two-Point operator will demonstrate a faster convergence rate compared to Blend Crossover due to its more exploitative nature.
+\paragraph{Hypothesis 2}
+Specialist agents evolved using the Blend Crossover operator will achieve higher performance compared to those evolved using the Two-Point crossover operator.
 
 We are developing, applying and comparing 2 EA (manipulating the crossover operators, one is blend crossover and the other one is two-point crossover) for the task of video game playing using a python framework called EvoMan to train a specialist agent (simulation mode “individual evolution”)
-
 
 \subsection{The EvoMan Framework}
 The EvoMan Framework is a Python-based platform designed for evaluating evolutionary algorithms in the context of game-playing agents, specifically inspired by the boss fights from Mega Man 2 de2016electronic).
 EvoMan provides an environment where specialist agents, which are optimised to face specific enemies, can be trained.
 It features eight distinct enemy bosses, each with unique behaviour that present different challenges in different environments to the player agent.
-Both the player and the enemies start with 100 energy points, which are reduced each time they come into contact or are hit by the weapon (2016evoman).
-
+Both the player and the enemies start with 100 energy points, which are reduced each time they come into contact or are hit by the weapon \cite{2016evoman}.
 
 \section{Method}
 \subsection{Algorithm Description}
@@ -48,7 +42,7 @@ Both the player and the enemies start with 100 energy points, which are reduced 
 \paragraph{2-Point crossover}
 Two indices between 1 and $n-1$ are chosen randomly.
 Both parents are split at the points specified by the indices.
-The offspring is then created by glueing the split parts togehter, alternating between parents, which results in two children.
+The offspring is then created by glueing the split parts together, alternating between parents, which results in two children.
 \begin{algorithm}
 \caption{2-Point Crossover}\label{alg:2px}
 \begin{algorithmic}
@@ -60,7 +54,6 @@ The offspring is then created by glueing the split parts togehter, alternating b
 
 \end{algorithmic}
 \end{algorithm}
-
 
 % Blend Crossover
 \paragraph{Blend crossover}
@@ -93,6 +86,25 @@ This means that children are highly unlikely to share any genes with their paren
 Thus Blend crossover is highly explorative for a crossover operation.
 
 \subsection{Experimental Setup}
+
+\begin{table}[tbp]
+    \begin{tabu}{|l|ll|}
+    \hline
+    Representation            & \multicolumn{2}{l|}{Real-valued vector}                  \\ \hline
+    Recombination             & \multicolumn{1}{l|}{2-Point-Crossover} & Blend Crossover \\ \hline
+    Recombination probability & \multicolumn{1}{l|}{70\%} & 70\%                         \\ \hline
+    Mutation                  & \multicolumn{2}{l|}{Gaussian, $\mu$=0, $\sigma$=0.3}     \\ \hline
+    Mutation probability      & \multicolumn{1}{l|}{10\%} & 5\%                          \\ \hline
+    Parent selection          & \multicolumn{2}{l|}{Tournament selection, size=3}        \\ \tabucline[1.2pt]{-}
+    Survival selection        & \multicolumn{2}{l|}{Replace all except best solution}    \\ \hline
+    Population size           & \multicolumn{2}{l|}{100, variable}                       \\ \tabucline[1.2pt]{-}
+    Number of offspring       & \multicolumn{2}{l|}{2}                                   \\ \hline
+    Initialisation            & \multicolumn{2}{l|}{Random}                              \\ \hline
+    Termination condition     & \multicolumn{2}{l|}{50 generations}                      \\ \hline
+    \end{tabu}
+    \caption{EA specification tableau.}
+\end{table}
+
 The experiment contains six training phases, three for each EA.
 Both EA’s will be trained against the same three enemies to assess their performance individually on each enemy.
 To optimize performance, the hyperparameters of both EAs are tuned by manual adjustments based on their prior performance.
@@ -125,9 +137,8 @@ The less complex enemy is enemy number 2.
 This is a simpler version of enemy 8.
 The complex enemy will be enemy 7.
 This enemy fights in an underwater world with unlimited jumping and spikes on the ceiling.
-
-
 \section{Results}
+
 \subsection{Hypothesis 1}
 The results confirm the prediction that the Blend Crossover operator demonstrates a slower convergence rate compared to the Two-Point Crossover operator across all enemies, which is shown as it crosses the convergence threshold faster.
 The convergence threshold was set at 85\% of the maximum fitness value, at the fitness score of 80, which is where the fitness curve tends to flatten.
@@ -137,6 +148,24 @@ For enemy 7, the Two-Point Crossover crossed the threshold in generation 44, whe
 For Enemy 8, the Two-Point Crossover crossed the threshold twice, in generations 23 and 41, whereas Blend Crossover did not cross the threshold.
 Additionally, the Blend Crossover showed a larger standard deviation across all enemies compared to the Two-Point Crossover.
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{../../plots/enemy2}
+    \caption{}
+    \label{fig:enemy2}
+\end{figure}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{../../plots/enemy7}
+    \caption{}
+    \label{fig:enemy7}
+\end{figure}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{../../plots/enemy8}
+    \caption{}
+    \label{fig:enemy8}
+\end{figure}
 
 \subsection{Hypothesis 2}
 The performance of specialist agents using the Blend Crossover and Two-Point Crossover was assessed across three different enemies.
@@ -152,6 +181,19 @@ Taking the median into consideration, it can be that the data in EA2 (Blend) is 
 In contrast, EA1 (2point) shows a concentration of values around the median, but with two outliers that influence the IQR and the whisker.
 Notably, the median for EA1 is high, whereas the median for EA2 is even negative.
 
+\begin{table}[tbp]
+    \begin{tabular}{|l|l|l|}
+    \hline
+    Enemy              & Crossover method & Maximum fitness \\ \hline
+    \multirow{2}{*}{2} & 2-PX             & 94.14           \\ \cline{2-3}
+                       & BlendX           & 94.74           \\ \hline
+    \multirow{2}{*}{7} & 2-PX             & 94.64           \\ \cline{2-3}
+                       & BlendX           & 94.18           \\ \hline
+    \multirow{2}{*}{8} & 2-PX             & 93.71           \\ \cline{2-3}
+                       & BlendX           & 93.94           \\ \hline
+    \end{tabular}
+\caption{Maximum achievied fitness values for each enemy and crossover method.}
+\end{table}
 
 \section{Discussion}
 Comparing the results for both EAs, we can conclude the following.
