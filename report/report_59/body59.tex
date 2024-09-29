@@ -14,21 +14,24 @@ Among them, crossover and mutation are the most critical as they both contribute
 Crossover, which combines genetic material from parent solutions to generate offspring, is important for exchanging successful traits between individuals in the population.
 This mechanism plays a critical role in promoting the discovery of high-performing solutions by allowing favourable traits to propagate and combine in new ways.
 In contrast, mutation introduces random changes to individual solutions, ensuring diversity within the generation and preventing premature convergence by exploring previously unexplored areas of the search space.
-While mutation is essential for maintaining variability within the population, it typically results in incremental changes (particularly in larger populations), often refining rather than drastically improving solutions (luke1997comparison).
+While mutation is essential for maintaining variability within the population, it typically results in incremental changes (particularly in larger populations), often refining rather than drastically improving solutions \cite{luke1997comparison}.
 Given the complexity of dynamic environments, crossover plays an important role in driving the rapid improvement of solutions, creating offspring that inherit the most effective traits from different individuals, and is therefore manipulated in this study.
+
+This study focuses on two specific crossover operators within an EA framework for training specialist agents: Blend Crossover (BLX) and Two-Point Crossover (2PX). BlLX generates offspring by producing a weighted blend of parental genes, potentially encouraging broader exploration of the solution space.
+In contrast, 2PX swaps segments of genetic material between two parent solutions at two points, potentially leading to more targeted exploitation of high-performing solutions.
 
 \subsection{Research Question and Hypotheses}
 The primary objective of this study is to evaluate the effects of these two crossover operators on the performance and convergence characteristics of an EA in training a specialist agent.
-This leads us to the following research question:
+Therefore two EAs are developed - EA-BLX using BLX and EA-2PX using 2PX - are developed and applied to a video game playing using a python framework called EvoMan.
+This leads to the following research question:
 
-\textit{What is the impact of BLEND and TWO-POINT crossover operators on the convergence and performance of an Evolutionary Algorithm in training a specialist agent in a video game playing python framework?}
+\textit{What is the impact of BLX and 2PX on the convergence and performance of an EA in training a specialist agent in a video game playing python framework?}
 
 \paragraph{Hypothesis 1}
-The Blend Crossover operator will demonstrate a slower convergence rate compared to the Two-Point Crossover operator, due to its greater exploration of the solution space. In contrast, the Two-Point operator will demonstrate a faster convergence rate compared to Blend Crossover due to its more exploitative nature.
+EA-BLX will demonstrate a slower convergence rate than EA-2PX due to its higher exploration of the solution space.
+In contrast, EA-2PX will demonstrate a faster convergence rate compared to EA-BLX due to its more exploitative nature.
 \paragraph{Hypothesis 2}
-Specialist agents evolved using the Blend Crossover operator will achieve higher performance compared to those evolved using the Two-Point crossover operator.
-
-We are developing, applying and comparing 2 EA (manipulating the crossover operators, one is blend crossover and the other one is two-point crossover) for the task of video game playing using a python framework called EvoMan to train a specialist agent (simulation mode “individual evolution”)
+Specialist agents evolved with EA-BLX will achieve higher performance compared to those evolved with EA-2PX.
 
 \subsection{The EvoMan Framework}
 The EvoMan Framework is a Python-based platform designed for evaluating evolutionary algorithms in the context of game-playing agents, specifically inspired by the boss fights from Mega Man 2 de2016electronic).
@@ -37,6 +40,7 @@ It features eight distinct enemy bosses, each with unique behaviour that present
 Both the player and the enemies start with 100 energy points, which are reduced each time they come into contact or are hit by the weapon \cite{2016evoman}.
 
 \section{Method}
+The following section provides an overview of the crossover algorithms used and details of the experimental setup.
 \subsection{Algorithm Description}
 % 2 Point Crossover
 \paragraph{2-Point crossover}
@@ -77,21 +81,38 @@ Blend crossover therefore introduces the additional hyperparameter $\alpha$ whic
 \end{algorithmic}
 \end{algorithm}
 
-The two methods were chosen because they provide different advantages to the EAs. 
-The 2-Point crossover creates offspring by combining different parts of the parents. 
-This results in children that are only made up of discrete genes that are present in their parents, which also means being limited to the inside of the hypercube defined by the parents. 
-2-Point crossover is therefore very exploitative.
-Blend crossover, on the other hand, uses the parents genes only for determining the continuous range from which the new real values are drawn. 
-This means that children are highly unlikely to share any genes with their parents 1 to 1 and also have the possibility to lie outside of the parents confines. 
-Thus Blend crossover is highly explorative for a crossover operation.
+The two methods were chosen because they offer different advantages to the EAs.
+2PX creates offspring by combining different parts of the parents.
+This results in offspring that consist only of discrete genes present in their parents, which also means that they are confined to the inside of the hypercube defined by their parents.
+2PX is therefore very exploitative.
+BLX, on the other hand, uses the parents' genes only to define the continuous range from which the new real values are drawn.
+This means that children are highly unlikely to share genes with their parents on a one-to-one basis, and also have the possibility to lie outside the parents confines.
+BLX is therefore highly exploratory for a crossover operation.
 
 \subsection{Experimental Setup}
+
+The specific EA specifications are shown in Table 1.
+The experiment consists of six training phases - three for each EA.
+Both EAs are trained on the same three enemies to individually assess their performance on each one.
+To optimize performance, the hyperparameters of both EAs are manually tuned throughout the experiment, using performance insights from prior runs.
+They hyperparameters tuned include both standard EA parameters and those specific to each EA.
+In particular, the standard deviation and mean for the Gaussian mutation, the tournament size for the tournament selection, and the $\alpha$ for BLX are adjusted.
+An individual training phase consists of ten independent runs, each lasting fifty generations.
+In every run one hundred initial individuals are evolved by the EA in order to maximize their fitness with respect to the chosen enemy.
+Over the ten runs, the maximum fitness, average fitness and their standard deviation are recorded and the best solution is saved.
+This yields two solutions for each of the three chosen enemies.
+
+To avoid overfitting, the 'randomini' option in the EvoMan framework is set to true, which ensures that enemies start from random position.
+This randomness requires the EA to account for varying enemy locations.
+
+The EAs are trained on enemies number 2, 7 and 8.
+This selection provides a diverse mix of bosses with vastly different ranges of difficulty and specialization and shows how the specialists adapt to them.
 
 \begin{table}[tbp]
     \begin{tabu}{|l|ll|}
     \hline
     Representation            & \multicolumn{2}{l|}{Real-valued vector}                  \\ \hline
-    Recombination             & \multicolumn{1}{l|}{2-Point-Crossover} & Blend Crossover \\ \hline
+    Recombination             & \multicolumn{1}{l|}{2-PointX} & BlendX \\ \hline
     Recombination probability & \multicolumn{1}{l|}{70\%} & 70\%                         \\ \hline
     Mutation                  & \multicolumn{2}{l|}{Gaussian, $\mu$=0, $\sigma$=0.3}     \\ \hline
     Mutation probability      & \multicolumn{1}{l|}{10\%} & 5\%                          \\ \hline
@@ -105,48 +126,16 @@ Thus Blend crossover is highly explorative for a crossover operation.
     \caption{EA specification tableau.}
 \end{table}
 
-The experiment contains six training phases, three for each EA.
-Both EA’s will be trained against the same three enemies to assess their performance individually on each enemy.
-To optimize performance, the hyperparameters of both EAs are tuned by manual adjustments based on their prior performance.
-Apart from the standard hyperparameters, the ones specific to our EA instances are the standard deviation and mean for the Gaussian mutation, the tournament size for the tournament selection and alpha for blend crossover.
-
-An individual training phase consists of ten independent runs, each lasting fifty generations.
-In every run one hundred initial individuals are evolved by the EA in order to maximize their fitness.
-Over the ten runs the maximum fitness, average fitness and their standard deviation are recorded and the best solution is saved.
-This yields two solutions for each of the three chosen enemies.
-
-The results are represented in three figures, one for each enemy, showing the performance of both EA’s.
-
-The two best solutions per enemy are tested against the enemy it has been trained on.
-The testing is done by running the solution against the enemy five times and plotting the individual gain in a box plot.
-[FIXME: is individual gain explained somewhere?]
-
-To avoid over-fitting, randomini in the Evoman framework is turned on.
-Randomini ensures the enemy is starting from a different place every time.
-Because of the different starting positions, the EA has to use the enemies’ locational values to beat it.
-Therefore, the testing will also be more accurate.
-
-For the experiment, an enemy is needed to adjust the hyper parameters on.
-For this task enemy 8 is chosen for several key reasons. First, enemies 1 and 8 jump, which adds complexity in tracking the enemy for the controller.
-Training against a jumping enemy is expected to enhance the controller’s ability to handle more unpredictable movements.
-This complexity can help to make sure the controller is evolving properly and is not getting stuck on local maxima.
-Additionally, enemy 1 is the only enemy that fights on a battlefield with height differences.
-By using a flat terrain, the environmental factors that could influence the controller’s behaviour are minimised thus giving a better representation of how the EA is performing.
-Two more enemies are needed to test the EAs on. A relatively simple and a complex enemy is chosen for this.
-The less complex enemy is enemy number 2.
-This is a simpler version of enemy 8.
-The complex enemy will be enemy 7.
-This enemy fights in an underwater world with unlimited jumping and spikes on the ceiling.
 \section{Results}
 
 \subsection{Hypothesis 1}
-The results confirm the prediction that the Blend Crossover operator demonstrates a slower convergence rate compared to the Two-Point Crossover operator across all enemies, which is shown as it crosses the convergence threshold faster.
-The convergence threshold was set at 85\% of the maximum fitness value, at the fitness score of 80, which is where the fitness curve tends to flatten.
+The results support the hypothesis that EA-BLX demonstrates a slower convergence rate compared to EA-2PX across all enemies, as it crosses the convergence threshold faster across all enemies.
+The convergence threshold was defined at 85\% of the maximum fitness value, set at a fitness score of 80, where the fitness curve tends to flatten (Figure X).
 
-For Enemy 2, the EA using Two-Point Crossover crossed the threshold in generation 12, whereas the EA using Blend Crossover crossed the threshold in generation 19.
-For enemy 7, the Two-Point Crossover crossed the threshold in generation 44, whereas Blend Crossover did not cross the threshold.
-For Enemy 8, the Two-Point Crossover crossed the threshold twice, in generations 23 and 41, whereas Blend Crossover did not cross the threshold.
-Additionally, the Blend Crossover showed a larger standard deviation across all enemies compared to the Two-Point Crossover.
+For Enemy 2, EA-2PX crossed the threshold in generation 12, whereas EA-BLX crossed the threshold in generation 19.
+For enemy 7, EA-2PX crossed the threshold in generation 44, whereas EA-BLX did not cross the threshold.
+For Enemy 8, EA-2PX crossed the threshold twice, in generations 23 and 41, whereas EA-BLX did not cross the threshold.
+Additionally, EA-BLX showed a larger standard deviation in fitness across all enemies compared to EA-2PX.
 
 \begin{figure}[htbp]
     \centering
@@ -168,18 +157,18 @@ Additionally, the Blend Crossover showed a larger standard deviation across all 
 \end{figure}
 
 \subsection{Hypothesis 2}
-The performance of specialist agents using the Blend Crossover and Two-Point Crossover was assessed across three different enemies.
-Table X summarizes the maximum fitness values achieved by each EA.
-The results indicate that for Enemy 2 and 8, EA2 (Blend) achieved higher maximum fitness values than EA1 (2Point), even if they were relatively similar.
-In contrast, for Enemy 8, EA1 showed higher maximum fitness values.
+The results partially support the hypothesis that specialist agents evolved using EA-BLX achieve higher performance compared to those evolved with EA-2PX.
+Table X summarizes the maximum fitness values achieved by each EA across all three enemies.
+The results indicate that for Enemy 2 and 8, EA-BLX achieved slightly higher maximum fitness values than EA1, although the differences were small - supporting the hypothesis.
+In contrast, for Enemy 7, EA-2PX showed higher maximum fitness values.
 Considering the SDs of the Maximum Fitness values, Enemy 7 exhibited larger SDs for both EAs.
 
-To get more insides on the results of enemy 7, not aligning with our hypothesis, individual gains using boxplots were examined.
-Given that the sample size (N = 5) limits the ability to statistically significance, the boxplot can only be considered as tendencies.
-The interquartile ranges of enemy 7 reveal that 50\% of the data for both EAs fall in the same range and the means of are close to each other.
-Taking the median into consideration, it can be that the data in EA2 (Blend) is more evenly distributed around the median.
-In contrast, EA1 (2point) shows a concentration of values around the median, but with two outliers that influence the IQR and the whisker.
-Notably, the median for EA1 is high, whereas the median for EA2 is even negative.
+To get more insides on the results of enemy 7, not aligning with the hypothesis, individual gains using boxplots were examined (Table X).
+Given that the sample size (N = 5) limits the ability to statistically significance, the boxplot can only reveal tendencies.
+The interquartile ranges (IQR) of enemy 7 reveal that 50\% of the data for both EAs fall in the same range and the means of are close to each other.
+Taking the median into consideration, it can be seen that the data in EA-BLX is more evenly distributed around the median.
+In contrast, EA-2PX shows a concentration of values around the median, but with two outliers that influence the IQR and the whisker.
+Notably, the median for EA-2PX is higher than the median for EA-BLX, which is even negative.
 
 \begin{table}[tbp]
     \begin{tabular}{|l|l|l|}
@@ -195,17 +184,25 @@ Notably, the median for EA1 is high, whereas the median for EA2 is even negative
 \caption{Maximum achievied fitness values for each enemy and crossover method.}
 \end{table}
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{../../plots/boxplots}
+    \caption{}
+    \label{fig:boxplots}
+\end{figure}
+
 \section{Discussion}
-Comparing the results for both EAs, we can conclude the following.
-The Two-Point Crossover operator showed a faster convergence, especially against enemies like Enemy 2, as hypothesized and which is in line with the general advantage of k-point crossovers discussed by Singh and Gupta[CITE].
-They also mention that Two-Point crossovers tend to exploit known good solutions by focusing on combining useful schemata, as well as having a tendency of getting trapped in local optima.
+The primary aim of this study was to explore the impact of BLX and 2PX on the performance and convergence characteristics of an EA when training specialist agents in a dynamic gaming environment.
+The findings indicate that the 2PX operator exhibited a faster convergence rate compared to BLX.
+This accelerated convergence may be attributed to the exploitative nature of 2PX, aligning with the observations of Singh and Gupta [CITE], who noted that k-point crossovers tend to capitalize on high-quality solutions.
+Conversely, the BLX operator demonstrated greater variability and a slower convergence rate, which facilitated more extensive exploration and mitigated the risk of early stagnation.
+This aligns with Singh and Gupta’s description of the BLX-α method as one that “creates offspring by allowing genes to vary more” [CITE], thereby preventing premature convergence and promoting higher exploration levels, as evidenced by its larger standard deviation across all enemy configurations.
+In terms of specialized agent performance, the results for enemies 2 and 8 conform to the hypothesis regarding BLX's slower convergence facilitating the escape from local optima.
+For enemy 7, however, a significant variability in maximum fitness outcomes is observed, which may indicate fewer local optima, thus diminishing BLX's potential advantages.
+This slower convergence of BLX not only fosters greater genetic diversity but also enhances exploration, ultimately leading to improved performance.
+In contrast, the rapid convergence of 2PX appears to limit genetic diversity, as it tends to exploit existing high-performing features.
+To further enhance this research, future studies could benefit from programmatic optimization of hyperparameters utilizing toolboxes such as Optuna, which could refine the performance of both crossover operators.
 
-On the other hand, the Blend Crossover operator showed more variability and a slower convergence, resulting in greater exploration and avoiding early stagnation.
-This aligns with the findings from Singh and Gupta[CITE], who describe the method of the crossover operator as “creates offspring by allowing genes to vary more” (BLX-α) in order to avoid premature convergence and once again demonstrating a higher exploration due to its larger standard deviation across all enemies.
-
-The results for the specialist agent performance showed that for Enemy 2, agents evolved using Two-Point Crossover achieved higher fitness scores earlier.
-However, for the more complex enemies, such as Enemies 7 and 8, agents evolved with Blend Crossover showed comparable or improved performance.
-Box plots of individual gain indicate that Two-Point Crossover led to higher peaks in fitness against simpler enemies, while Blend Crossover exhibited a more balanced performance across complex scenarios, with more consistent median gains.
 
 
 %\section{Conclusions}
