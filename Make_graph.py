@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 # Load data from logs
 dir_name = 'optimization_test'
-enemy_number = '8'
+enemy_number = '2'
 data_2px = np.load('cx_' + enemy_number + '/logs1.npz')
 data_blendx = np.load('blend_' + enemy_number + '/logs1.npz')
 
@@ -13,7 +13,7 @@ data_blendx = np.load('blend_' + enemy_number + '/logs1.npz')
 generations = np.arange(1, len(data_2px['max_fitness']) + 1)
 
 plt.figure(figsize=(10, 6))
-plt.rcParams.update({'font.size': 10})
+plt.rcParams.update({'font.size': 15})
 
 # Plot convergence threshold line at fitness = 80
 plt.plot([-5, max(generations)+5], [80, 80], 'k:', alpha=0.4, label='Convergence threshold')
@@ -42,11 +42,11 @@ plt.fill_between(generations, data_blendx['avg_fitness'] - data_blendx['std_avg_
 plt.xlabel('Generation')
 plt.ylabel('Fitness')
 # plt.title('Comparison of Fitness Metrics with Shaded Standard Deviation for EA1 and EA2')
-plt.legend(loc='best', fontsize=8)
+plt.legend(loc='best', fontsize=10)
 
 # Edit x-limits and ticks
 plt.xlim((0, max(generations)+1))
-plt.xticks(np.arange(0, max(generations)+1, step=2))
+plt.xticks(np.arange(0, max(generations)+1, step=5))
 
 plt.tight_layout()
 plt.show()
