@@ -15,7 +15,7 @@ data = [blendx2, twopointx2, blendx7, twopointx7, blendx8, twopointx8]
 
 fig, ax = plt.subplots(figsize=(10, 6))
 plt.rcParams.update({'font.size': 10})
-ax.boxplot(data)
+ax.boxplot(data, showmeans=True)
 
 # Add labels and legend (title is added in latex)
 # plt.xlabel('EA specialist instances')
