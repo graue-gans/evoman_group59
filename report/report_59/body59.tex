@@ -1,26 +1,120 @@
 %% MANUSCRIPT IN THE PROGRESS IN THIS DOC: PLEASE CONTRIBUTE THERE
 %%https://docs.google.com/document/d/16clK-npH8XWA7p_llKXXWScyVuvJ1bjQ9kDyP1jmniw/edit?usp=sharing
 
-\section{Introduction}
-Background: Motivation of EAs in game playing (EvoMan), optimization problems, explaining genetic operators (such as mutation and crossover?) \\
+\section{Introduction}\label{sec:introduction}
+In recent years, Evolutionary Algorithms (EAs) have become increasingly prominent in training agents within complex environments, particularly in areas such as video game AI (lucas2006evolutionary).
+Video games serve as ideal testing grounds for EA research, as they are characterized by dynamic, non-linear challenges and uncertainties, such as unpredictable enemies (togelius2007computational, togelius2009super).
+These qualities need adaptive and robust solutions, often making traditional optimization methods less effective due to high-dimensional search spaces and non-stationary conditions (yannakakis2018AIgames).
+By continuously interacting with the environment, agents trained via EAs can learn to navigate and adapt to the evolving challenges posed by these complex environments.
 
-Crossover vs. Mutation: why are we manipulating Crossover instead of mutation? potential impact of crossover on convergence \\
+EAs are inspired by the principles of natural selection and biological evolution, where solutions evolve over successive generations using key genetic operators such as selection, crossover (also known as recombination), and mutation (eiben2015bookEA).
+These operators are essential, as they allow for the exploration and exploitation of the solution space in search of optimal solutions.
+Among them, crossover and mutation are the most critical as they both contribute to genetic diversity (luke1997comparison). 
 
-Research Gap: why those specific crossover operators? keyterms: overfitting, convergence, leading to RQ \\
+Crossover, which combines genetic material from parent solutions to generate offspring, is important for exchanging successful traits between individuals in the population.
+This mechanism plays a critical role in promoting the discovery of high-performing solutions by allowing favourable traits to propagate and combine in new ways.
+In contrast, mutation introduces random changes to individual solutions, ensuring diversity within the generation and preventing premature convergence by exploring previously unexplored areas of the search space.
+While mutation is essential for maintaining variability within the population, it typically results in incremental changes (particularly in larger populations), often refining rather than drastically improving solutions (luke1997comparison).
+Given the complexity of dynamic environments, crossover plays an important role in driving the rapid improvement of solutions, creating offspring that inherit the most effective traits from different individuals, and is therefore manipulated in this study.
 
-Research Question:
-\begin{itemize}
- 	\item What is the impact of BLEND and TWO-POINT crossover operators on the convergence and performance of an Evolutionary Algorithm in training a specialist agent in EvoMan?
- 	\item maybe adding the term overfitting to the RQ? or only focus on convergence and mentioning overfitting in discussion
-	\item Does BLEND crossover result in faster convergence than TWO-POINT crossover? Which operator helps the EA avoid local optima more effectively?
-	\item we could have hypotheses related to overfitting and convergence behavior of the two operators
-\end{itemize}
+This study focuses on two specific crossover operators within an EA framework for training specialist agents: Blend Crossover and Two-Point Crossover.
+Blend Crossover creates offspring by producing a weighted blend of parental genes, potentially encouraging broader exploration of the solution space.
+Two-point crossover swaps segments of genetic material between two parent solutions at two points potentially leading to more targeted exploitation of high-performing solutions.
+
+\subsection{Research Question and Hypotheses}
+
+\subsection{The EvoMan Framework}
+
 
 \section{Method}
-explanation of the algorithms and operators: \\
-comparing different crossover operators over EA, keeping the rest of the algorithm fixed
+\subsection{Algorithm Description}
+% 2 Point Crossover
+\paragraph{2-Point crossover}
+Two indices between 1 and $n-1$ are chosen randomly.
+Both parents are split at the points specified by the indices.
+The offspring is then created by glueing the split parts togehter, alternating between parents, which results in two children.
+\begin{algorithm}
+\caption{2-Point Crossover}\label{alg:2px}
+\begin{algorithmic}
+
+\Require $X^{(t)}, Y^{(t)}$
+\State Choose two uniform random numbers $c_1, c_2 \in [1, n-1]$
+\State $X^{(t+1)} \gets X^{(t)}[0:c_1] + Y^{(t)}[c_1:c_2] + X^{(t)}[c_2:n]$
+\State $Y^{(t+1)} \gets Y^{(t)}[0:c_1] + X^{(t)}[c_1:c_2] + Y^{(t)}[c_2:n]$
+
+\end{algorithmic}
+\end{algorithm}
+
+
+% Blend Crossover
+\paragraph{Blend crossover}
+For every pair of scalars $x_i^{(t)}, y_i^{(t)}$ from $X^{(t)}, Y^{(t)}$, respectively, a distance $d_i$ is calculated.
+Using $d_i$ and the input parameter $\alpha$, an interval is constructed from which two real numbers are chosen randomly as the values for $x_i^{(t+1)}$ and $y_i^{(t+1)}$. \\
+Blend crossover therefore introduces the additional hyperparameter $\alpha$ which scales the size of the interval the random values are chosen from.
+\begin{algorithm}
+\caption{Blend Crossover}\label{alg:blendx}
+\begin{algorithmic}
+
+\Require $X^{(t)}, Y^{(t)}$
+\Ensure $\alpha \in \mathbb{R}_{\geq 0}$
+\For{$i = 1, \dots, n$}
+    \State $d_i \gets |x_i^{(t)} -  y_i^{(t)}|$
+    \State Choose two uniform random real numbers
+    \State $u_1, u_2 \in [\min(x_i^{(t)}, y_i^{(t)}) - \alpha d_i, \max(x_i^{(t)}, y_i^{(t)}) + \alpha d_i]$
+    \State $x_i^{(t+1)} \gets u_1$
+    \State $y_i^{(t+1)} \gets u_2$
+\EndFor
+
+\end{algorithmic}
+\end{algorithm}
+
+The two methods were chosen because they provide different advantages to the EAs. 
+The 2-Point crossover creates offspring by combining different parts of the parents. 
+This results in children that are only made up of discrete genes that are present in their parents, which also means being limited to the inside of the hypercube defined by the parents. 
+2-Point crossover is therefore very exploitative.
+Blend crossover, on the other hand, uses the parents genes only for determining the continuous range from which the new real values are drawn. 
+This means that children are highly unlikely to share any genes with their parents 1 to 1 and also have the possibility to lie outside of the parents confines. 
+Thus Blend crossover is highly explorative for a crossover operation.
+
+\subsection{Experimental Setup}
+The experiment contains six training phases, three for each EA.
+Both EA’s will be trained against the same three enemies to assess their performance individually on each enemy.
+To optimize performance, the hyperparameters of both EAs are tuned by manual adjustments based on their prior performance.
+Apart from the standard hyperparameters, the ones specific to our EA instances are the standard deviation and mean for the Gaussian mutation, the tournament size for the tournament selection and alpha for blend crossover.
+
+An individual training phase consists of ten independent runs, each lasting fifty generations.
+In every run one hundred initial individuals are evolved by the EA in order to maximize their fitness.
+Over the ten runs the maximum fitness, average fitness and their standard deviation are recorded and the best solution is saved.
+This yields two solutions for each of the three chosen enemies.
+
+The results are represented in three figures, one for each enemy, showing the performance of both EA’s.
+
+The two best solutions per enemy are tested against the enemy it has been trained on.
+The testing is done by running the solution against the enemy five times and plotting the individual gain in a box plot.
+[FIXME: is individual gain explained somewhere?]
+
+To avoid over-fitting, randomini in the Evoman framework is turned on.
+Randomini ensures the enemy is starting from a different place every time.
+Because of the different starting positions, the EA has to use the enemies’ locational values to beat it.
+Therefore, the testing will also be more accurate.
+
+For the experiment, an enemy is needed to adjust the hyper parameters on.
+For this task enemy 8 is chosen for several key reasons. First, enemies 1 and 8 jump, which adds complexity in tracking the enemy for the controller.
+Training against a jumping enemy is expected to enhance the controller’s ability to handle more unpredictable movements.
+This complexity can help to make sure the controller is evolving properly and is not getting stuck on local maxima.
+Additionally, enemy 1 is the only enemy that fights on a battlefield with height differences.
+By using a flat terrain, the environmental factors that could influence the controller’s behaviour are minimised thus giving a better representation of how the EA is performing.
+Two more enemies are needed to test the EAs on. A relatively simple and a complex enemy is chosen for this.
+The less complex enemy is enemy number 2.
+This is a simpler version of enemy 8.
+The complex enemy will be enemy 7.
+This enemy fights in an underwater world with unlimited jumping and spikes on the ceiling.
+
 
 \section{Results}
+\subsection{Hypothesis 1}
+
+\subsection{Hypothesis 2}
 
 \section{Discussion}
 
