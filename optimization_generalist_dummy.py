@@ -18,7 +18,33 @@ import random
 import matplotlib.pyplot as plt
 
 from deap import base, creator, tools, algorithms
+import multiprocessing
+import optuna
 
+#TODO Alpha optimaliseren van blend
+#TODO Check if 50 generations is sufficient
+
+
+
+# Environment setup to be initialized inside worker
+def create_environment():
+    # this has to be a function because multicore processes cant share the enviroment so each evaluation needs their own.
+    experiment_name = 'Test'
+    if not os.path.exists(experiment_name):
+        os.makedirs(experiment_name)
+
+    n_hidden_neurons = 10
+    return Environment(experiment_name=experiment_name,
+                       logs="off",
+                       enemies=[1,2,3,4,5,6,7,8],
+                       multiplemode="yes",
+                       playermode="ai",
+                       player_controller=player_controller(n_hidden_neurons),  # Insert your own controller here
+                       enemymode="static",
+                       level=2,
+                       speed="fastest",
+                       visuals=True,
+                       randomini="no")
 # runs simulation
 def simulation(env,x):
     f,p,e,t = env.play(pcont=x)
@@ -32,15 +58,22 @@ def simulation_indu(env,x):
 def evaluate(env, x):
     return np.array(list(map(lambda y: simulation(env,y), x)))
 
+def evaluate_individual(individual):
+    # multiprocessing can share memory. So a new enviorment is created for every evaluation
+    env = create_environment()
+
+    fitness = env.play(pcont=np.array(individual))[0]  # Fitness is the first return value of play
+    return fitness,
+
 
 def main():
     # choose this for not using visuals and thus making experiments faster
-    headless = True
+    headless = False
     if headless:
         os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 
-    experiment_name = 'blend_7'
+    experiment_name = 'Test13468_blend'
     if not os.path.exists(experiment_name):
         os.makedirs(experiment_name)
 
@@ -48,37 +81,72 @@ def main():
     n_hidden_neurons = 10
     dom_l = -1
     dom_u = 1
-    npop = 100 #50
-    cx_prob = 0.7  # Probability of mating (crossover)
-    mut_prob = 0.05  # Probability of mutating
-    n_generations = 50  # Number of generations 50
+    npop = 153 #50
+    cx_prob = 0.516  # Probability of mating (crossover)
+    mut_prob = 0.044  # Probability of mutating
+    n_generations = 100  # Number of generations 50
     tournsize = 3
-    sigma_gausian = 0.3
+    sigma_gausian = 0.65
+    alpha = 0.44
 
     # program options
-    run_times = 10
-    program_name = "run_experiment"
+    run_times = 50
+    program_name = "run_solution_3"
 
  #   random.seed(43) #43 shows a nice graph
 
 
-    # initializes simulation in individual evolution mode, for single static enemy.
-    env = Environment(experiment_name=experiment_name,
-                    enemies=[7],
+    env = create_environment()
 
-                    playermode="ai",
-                    player_controller=player_controller(n_hidden_neurons), # you  can insert your own controller here
-                    enemymode="static",
-                    level=2,
-                    speed="fastest",
-                    visuals=False,
-                    randomini="yes")
+    # enable multiprocessing
+    pool = multiprocessing.Pool()
 
 
     env.state_to_log()
 
+    # optimise hyperparameters
+    if program_name == "optimize":
+
+        # Define the objective function for Optuna
+        def objective(trial):
+            # limits hyperparameters
+            npop = trial.suggest_int("npop", 50, 200)  # Population size
+            cx_prob = trial.suggest_float("cx_prob", 0.5, 0.9)  # Crossover probability
+            mut_prob = trial.suggest_float("mut_prob", 0.01, 0.1)  # Mutation probability
+            tournsize = trial.suggest_int("tournsize", 2, 6)  # Tournament size
+            sigma_gausian = trial.suggest_float("sigma_gausian", 0.1, 1.0)  # Sigma for Gaussian mutation
+            alpha = trial.suggest_float("alpha", 0.1, 1.0)
+
+            times = 5
+            total_fitness = 0
+            overall_best_fitness = 0
+
+            # Run the EA a few times and get the avg for the stocastic nature of the EA
+            #TODO maybe we should use maximum value instead of avg
+            for i in range(times):
+                logbook, current_best_individual, best_fitness = run_ea(
+                    env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize, sigma_gausian,alpha, pool
+                )
+                if best_fitness >= overall_best_fitness:
+                    overall_best_fitness = best_fitness
+
+
+            return overall_best_fitness  # Return the fitness to maximize
+
+        # create an study and optimize
+        study = optuna.create_study(direction="maximize")
+        study.optimize(objective, n_trials=50)
+
+        print("Best hyperparameters:", study.best_params)
+        print("Best fitness achieved:", study.best_value)
+
+        # save best hyperparameters
+        with open(experiment_name + '/best_hyperparams.txt', 'w') as f:
+            f.write(f"Best hyperparameters: {study.best_params}\n")
+            f.write(f"Best fitness: {study.best_value}\n")
+
     # running the ea one time with graphs
-    if program_name == "test_single":
+    elif program_name == "run_one_time":
         logbook = run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize, sigma_gausian)
 
         # plot the fitness  over generations
@@ -110,10 +178,14 @@ def main():
         best_fitness_all = 0
 
 
+
+        # register the parallelized map function with the toolbox
+        toolbox = run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize, sigma_gausian, alpha, pool)
+
         # runs ea run_times times
         for run in range(run_times):
             print(f"Running simulation {run + 1}/{run_times}")
-            logbook, current_best_individual, best_fitness= run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize, sigma_gausian)
+            logbook, current_best_individual, best_fitness= run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize, sigma_gausian, alpha, pool)
             if best_fitness > best_fitness_all:
                 best_fitness_all = best_fitness
                 best_individual = current_best_individual
@@ -148,6 +220,9 @@ def main():
         plt.legend(loc="best")
         plt.grid(True)
         plt.show()
+
+
+
 
 
     # run the best found solution in the previous experiment
@@ -189,19 +264,18 @@ def main():
 
         sys.exit(0)
 
-
-
     else:
         print(f"Program '{program_name}' not found")
 
+    # Close the pool at the end
+    pool.close()
+    pool.join()
 
-def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize, sigma_gausian):
 
-    # deap only works with evaluation of an individual
-    # cant putt this between other functions because local variable env cant be passed with Deap
-    def evaluate_individual(individual):
-        fitness = env.play(pcont=np.array(individual))[0]  # Fitness is the first return value of play
-        return fitness,
+def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize, sigma_gausian, alpha, pool):
+
+    # create enviroment
+    env = create_environment()
 
     # number of weights for multilayer with 10 hidden neurons
     n_vars = (env.get_num_sensors() + 1) * n_hidden_neurons + (n_hidden_neurons + 1) * 5
@@ -224,12 +298,15 @@ def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_gener
 
     # register the crossover and mutation functions
    # toolbox.register("mate", tools.cxTwoPoint)  # Two-point crossover
-    toolbox.register("mate", tools.cxBlend, alpha=0.8)  # Two-point crossover
+    toolbox.register("mate", tools.cxBlend, alpha=alpha)
 
     toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=sigma_gausian, indpb=mut_prob)  # Gaussian mutation
   #  toolbox.register("mutate", tools.mutShuffleIndexes, indpb=0.05)  # Gaussian mutation
 
-    toolbox.register("select", tools.selTournament, tournsize=tournsize)  # Tournament selec
+    toolbox.register("select", tools.selTournament, tournsize=tournsize)  # tournament selection
+
+    # Replace the default map with the multiprocessing version
+    toolbox.register("map", pool.map)
 
     # add logging
     stats = tools.Statistics(key=lambda ind: ind.fitness.values)
@@ -244,8 +321,8 @@ def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_gener
     # create initial population
     population = toolbox.population(npop)
 
-    # evaluate the initial population
-    fitnesses = list(map(toolbox.evaluate, population))
+    # Evaluate the initial population
+    fitnesses = list(toolbox.map(toolbox.evaluate, population))
     for ind, fit in zip(population, fitnesses):
         ind.fitness.values = fit
 
@@ -280,8 +357,8 @@ def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_gener
                 del mutant.fitness.values
 
         # evaluate if no fitness
-        invalid_ind = [ind for ind   in offspring if not ind.fitness.valid]
-        fitnesses = map(toolbox.evaluate, invalid_ind)
+        invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
+        fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
         for ind, fit in zip(invalid_ind, fitnesses):
             ind.fitness.values = fit
 
