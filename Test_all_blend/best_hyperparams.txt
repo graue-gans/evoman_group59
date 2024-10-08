@@ -1,0 +1,2 @@
+Best hyperparameters: {'npop': 195, 'cx_prob': 0.6423000439367688, 'mut_prob': 0.09915278623041156, 'tournsize': 4, 'sigma_gausian': 0.5955028126073995, 'alpha': 0.29770732900784835}
+Best fitness: 89.8811061457269

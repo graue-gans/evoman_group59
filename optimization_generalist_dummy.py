@@ -21,12 +21,8 @@ from deap import base, creator, tools, algorithms
 import multiprocessing
 import optuna
 
-#TODO Alpha optimaliseren van blend
-#TODO Check if 50 generations is sufficient
 
 
-
-# Environment setup to be initialized inside worker
 def create_environment():
     # this has to be a function because multicore processes cant share the enviroment so each evaluation needs their own.
     experiment_name = 'Test'
@@ -36,14 +32,14 @@ def create_environment():
     n_hidden_neurons = 10
     return Environment(experiment_name=experiment_name,
                        logs="off",
-                       enemies=[1,2,3,4,5,6,7,8],
+                       enemies=[1,2,3,4,5,6,7,8],       #TODO change to your enemies
                        multiplemode="yes",
                        playermode="ai",
                        player_controller=player_controller(n_hidden_neurons),  # Insert your own controller here
                        enemymode="static",
                        level=2,
                        speed="fastest",
-                       visuals=True,
+                       visuals=False,
                        randomini="no")
 # runs simulation
 def simulation(env,x):
@@ -59,7 +55,7 @@ def evaluate(env, x):
     return np.array(list(map(lambda y: simulation(env,y), x)))
 
 def evaluate_individual(individual):
-    # multiprocessing can share memory. So a new enviorment is created for every evaluation
+    # multiprocessing can share memory. So a new environment is created for every evaluation
     env = create_environment()
 
     fitness = env.play(pcont=np.array(individual))[0]  # Fitness is the first return value of play
@@ -68,12 +64,12 @@ def evaluate_individual(individual):
 
 def main():
     # choose this for not using visuals and thus making experiments faster
-    headless = False
+    headless = True
     if headless:
         os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 
-    experiment_name = 'Test13468_blend'
+    experiment_name = 'Test_all_blend' #TODO Change name for your experiment
     if not os.path.exists(experiment_name):
         os.makedirs(experiment_name)
 
@@ -81,7 +77,7 @@ def main():
     n_hidden_neurons = 10
     dom_l = -1
     dom_u = 1
-    npop = 153 #50
+    npop = 153 #153
     cx_prob = 0.516  # Probability of mating (crossover)
     mut_prob = 0.044  # Probability of mutating
     n_generations = 100  # Number of generations 50
@@ -90,8 +86,8 @@ def main():
     alpha = 0.44
 
     # program options
-    run_times = 50
-    program_name = "run_solution_3"
+    run_times = 10
+    program_name = "optimize"
 
  #   random.seed(43) #43 shows a nice graph
 
@@ -120,22 +116,26 @@ def main():
             times = 5
             total_fitness = 0
             overall_best_fitness = 0
+            best_solution = 0
 
-            # Run the EA a few times and get the avg for the stocastic nature of the EA
-            #TODO maybe we should use maximum value instead of avg
+            # Run the EA a few times and get the max for the stocastic nature of the EA
+            #TODO maybe we should use avg instead of maximum
             for i in range(times):
-                logbook, current_best_individual, best_fitness = run_ea(
+                logbook, current_best_solution, best_fitness = run_ea(
                     env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize, sigma_gausian,alpha, pool
                 )
                 if best_fitness >= overall_best_fitness:
                     overall_best_fitness = best_fitness
+                    best_solution = current_best_solution
+
+            trial.set_user_attr("best_solution", best_solution)
 
 
             return overall_best_fitness  # Return the fitness to maximize
 
         # create an study and optimize
         study = optuna.create_study(direction="maximize")
-        study.optimize(objective, n_trials=50)
+        study.optimize(objective, n_trials=100)
 
         print("Best hyperparameters:", study.best_params)
         print("Best fitness achieved:", study.best_value)
@@ -144,6 +144,15 @@ def main():
         with open(experiment_name + '/best_hyperparams.txt', 'w') as f:
             f.write(f"Best hyperparameters: {study.best_params}\n")
             f.write(f"Best fitness: {study.best_value}\n")
+
+        best_trial = study.best_trial
+        best_solution = best_trial.user_attrs["best_solution"]
+
+        # saves file with the best solution
+        np.savetxt(experiment_name + '/best.txt', best_solution)
+        print(f"The best solutions fitness is {study.best_value} and has been saved")
+
+        print(best_solution)
 
     # running the ea one time with graphs
     elif program_name == "run_one_time":
@@ -297,7 +306,7 @@ def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_gener
     toolbox.register("evaluate", evaluate_individual)
 
     # register the crossover and mutation functions
-   # toolbox.register("mate", tools.cxTwoPoint)  # Two-point crossover
+   # toolbox.register("mate", tools.cxTwoPoint)  # Two-point crossover      #TODO change recombination function
     toolbox.register("mate", tools.cxBlend, alpha=alpha)
 
     toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=sigma_gausian, indpb=mut_prob)  # Gaussian mutation
