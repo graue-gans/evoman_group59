@@ -69,7 +69,7 @@ def main():
         os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 
-    experiment_name = 'Test_all_blend' #TODO Change name for your experiment
+    experiment_name = 'cx_12345678' #TODO Change name for your experiment
     if not os.path.exists(experiment_name):
         os.makedirs(experiment_name)
 
@@ -77,17 +77,17 @@ def main():
     n_hidden_neurons = 10
     dom_l = -1
     dom_u = 1
-    npop = 153 #153
-    cx_prob = 0.516  # Probability of mating (crossover)
-    mut_prob = 0.044  # Probability of mutating
+    npop = 177 #153
+    cx_prob = 0.756  # Probability of mating (crossover)
+    mut_prob = 0.074  # Probability of mutating
     n_generations = 100  # Number of generations 50
-    tournsize = 3
-    sigma_gausian = 0.65
-    alpha = 0.44
+    tournsize = 5
+    sigma_gausian = 0.57
+    alpha = 0.42
 
     # program options
     run_times = 10
-    program_name = "optimize"
+    program_name = "run_experiment"
 
  #   random.seed(43) #43 shows a nice graph
 
@@ -132,6 +132,7 @@ def main():
 
 
             return overall_best_fitness  # Return the fitness to maximize
+
 
         # create an study and optimize
         study = optuna.create_study(direction="maximize")
@@ -306,8 +307,8 @@ def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_gener
     toolbox.register("evaluate", evaluate_individual)
 
     # register the crossover and mutation functions
-   # toolbox.register("mate", tools.cxTwoPoint)  # Two-point crossover      #TODO change recombination function
-    toolbox.register("mate", tools.cxBlend, alpha=alpha)
+    toolbox.register("mate", tools.cxTwoPoint)  # Two-point crossover      #TODO change recombination function
+   # toolbox.register("mate", tools.cxBlend, alpha=alpha)
 
     toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=sigma_gausian, indpb=mut_prob)  # Gaussian mutation
   #  toolbox.register("mutate", tools.mutShuffleIndexes, indpb=0.05)  # Gaussian mutation
@@ -330,7 +331,7 @@ def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_gener
     # create initial population
     population = toolbox.population(npop)
 
-    # Evaluate the initial population
+    # evaluate the initial population
     fitnesses = list(toolbox.map(toolbox.evaluate, population))
     for ind, fit in zip(population, fitnesses):
         ind.fitness.values = fit
@@ -342,9 +343,8 @@ def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_gener
 
     # evolutionary algorithm
     for gen in range(1, n_generations):
-#        print(f"Generation {gen}")
 
-        # Select offspring
+        # select offspring
         offspring = toolbox.select(population, len(population)-1)
         offspring = list(map(toolbox.clone, offspring))
 
