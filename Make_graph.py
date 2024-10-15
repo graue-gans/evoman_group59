@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 
 
 # Load data from logs
-dir_name = 'optimization_test'
-enemy_number = '8'
-data_2px = np.load('cx_' + enemy_number + '/logs1.npz')
-data_blendx = np.load('blend_' + enemy_number + '/logs1.npz')
+dir_name = 'make_graph'
+enemy_number = '1,2,3,4,5,6,7,8'
+data_2px = np.load('Make_graph' + '/Cx.npz')
+data_blendx = np.load('Make_graph' + '/Blend.npz')
 
 
 # Create generations vector
