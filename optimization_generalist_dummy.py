@@ -32,7 +32,7 @@ def create_environment():
     n_hidden_neurons = 10
     return Environment(experiment_name=experiment_name,
                        logs="off",
-                       enemies=[1,2,3,4,5,6,7,8],       #TODO change to your enemies
+                       enemies=[1,2,3,4,5,6,7,8],
                        multiplemode="yes",
                        playermode="ai",
                        player_controller=player_controller(n_hidden_neurons),  # Insert your own controller here
@@ -69,7 +69,7 @@ def main():
         os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 
-    experiment_name = 'cx_12345678_experiment' #TODO Change name for your experiment
+    experiment_name = 'test_blend_all_mees' #TODO Change name for your experiment
     if not os.path.exists(experiment_name):
         os.makedirs(experiment_name)
 
@@ -77,19 +77,19 @@ def main():
     n_hidden_neurons = 10
     dom_l = -1
     dom_u = 1
-    npop = 177 #153
-    cx_prob = 0.756  # Probability of mating (crossover)
-    mut_prob = 0.074  # Probability of mutating
+    npop = 200 #153
+    cx_prob = 0.885  # Probability of mating (crossover)
+    mut_prob = 0.0474  # Probability of mutating
     n_generations = 500  # Number of generations 50
-    tournsize = 5
-    sigma_gausian = 0.57
-    alpha = 0.42
+    tournsize = 4
+    sigma_gausian = 0.876
+    alpha = 0.78
 
     # program options
-    run_times = 10
+    run_times = 20
     program_name = "run_experiment"
 
- #   random.seed(43) #43 shows a nice graph
+ #   random.seed(43)
 
 
     env = create_environment()
@@ -118,8 +118,7 @@ def main():
             overall_best_fitness = 0
             best_solution = 0
 
-            # Run the EA a few times and get the max for the stocastic nature of the EA
-            #TODO maybe we should use avg instead of maximum
+            # Run the EA a few times and get the max for the stocastic nature of the EA. Take the maximum fitness and use that
             for i in range(times):
                 logbook, current_best_solution, best_fitness = run_ea(
                     env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize, sigma_gausian,alpha, pool
@@ -187,8 +186,6 @@ def main():
         all_max_fitness = np.zeros((run_times, n_generations))
         best_fitness_all = 0
 
-
-
         # register the parallelized map function with the toolbox
         toolbox = run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize, sigma_gausian, alpha, pool)
 
@@ -214,7 +211,7 @@ def main():
         avg_fitness_across_runs = np.mean(all_avg_fitness, axis=0)
         std_fitness_across_runs = np.mean(all_std_fitness, axis=0)
 
-        #logs files
+        # logs files
         np.savez(experiment_name + '/logs1.npz', std_fitness=std_mac_fitness, max_fitness=max_fitness_across_runs, avg_fitness=avg_fitness_across_runs, std_avg_fitness=std_fitness_across_runs)
 
         # plot the avg and std
@@ -231,12 +228,8 @@ def main():
         plt.grid(True)
         plt.show()
 
-
-
-
-
     # run the best found solution in the previous experiment
-    # IMPORTANT to run graphics set HEADLESS to FALSE
+    # IMPORTANT to run graphics set HEADLESS to FALSE and Visuals to TRUE
     elif program_name == "run_solution":
         bsol = np.loadtxt(experiment_name + '/best.txt')
         print('\n RUNNING SAVED BEST SOLUTION \n')
@@ -247,6 +240,8 @@ def main():
 
         sys.exit(0)
 
+
+    # shows individual gain after each trial 5 times
     elif program_name == "run_solution_5_times":
         bsol = np.loadtxt(experiment_name + '/best.txt')
         print('\n RUNNING SAVED BEST SOLUTION \n')
@@ -258,28 +253,35 @@ def main():
 
         sys.exit(0)
 
-    # run the best found solution in the previous experiment, for 3 games
+    # run the best found solution in the previous experiment, and give the indipendend statistics for all enemies
     # IMPORTANT to run graphics set HEADLESS to FALSE
     elif program_name == "run_solution_8_enemies":
+
+        # don't need multiprocessing for this so close the pool
+        pool.close()
+        pool.join()
+
         bsol = np.loadtxt(experiment_name + '/best.txt')
         print('\n RUNNING SAVED BEST SOLUTION 8 ENEMIES\n')
+
         env.update_parameter('speed', 'fastest')
+        env.update_parameter('multiplemode', 'no')
         levellist = [1,2,3,4,5,6,7,8]
+
+        print(f"{'Generation':<12} {'Fitness':<10} {'PlayerLife':<12} {'EnemyLife':<10} {'GameRuntime':<12}")
+        print("=" * 58)  # Divider line for neatness
+
         for i in levellist:
-            print("hoi")
             env.update_parameter('enemies', [i])
-
             fitness, playerlife, enemylife, gameruntime = simulation_indu(env, bsol)
-            print("hoi2")
-
-            print(f"level: {i} \nfitness: {fitness} \nplayerlife: {playerlife}\nenemylife: {enemylife}\ngameruntime: {gameruntime}")
+            print(f"{i:<12} {fitness:<10.2f} {playerlife:<12.2f} {enemylife:<10.2f} {gameruntime:<12}")
 
         sys.exit(0)
 
     else:
         print(f"Program '{program_name}' not found")
 
-    # Close the pool at the end
+    # close the pool at the end
     pool.close()
     pool.join()
 
@@ -309,7 +311,7 @@ def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_gener
     toolbox.register("evaluate", evaluate_individual)
 
     # register the crossover and mutation functions
-   # toolbox.register("mate", tools.cxTwoPoint)  # Two-point crossover      #TODO change recombination function
+   # toolbox.register("mate", tools.cxTwoPoint)  # Two-point crossover
     toolbox.register("mate", tools.cxBlend, alpha=alpha)
 
     toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=sigma_gausian, indpb=mut_prob)  # Gaussian mutation
