@@ -25,7 +25,7 @@ import optuna
 
 def create_environment():
     # this has to be a function because multicore processes cant share the enviroment so each evaluation needs their own.
-    experiment_name = 'Test'
+    experiment_name = 'Test' # doesnt matter
     if not os.path.exists(experiment_name):
         os.makedirs(experiment_name)
 
@@ -69,7 +69,7 @@ def main():
         os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 
-    experiment_name = 'cx_12345678' #TODO Change name for your experiment
+    experiment_name = 'cx_12345678_experiment' #TODO Change name for your experiment
     if not os.path.exists(experiment_name):
         os.makedirs(experiment_name)
 
@@ -80,7 +80,7 @@ def main():
     npop = 177 #153
     cx_prob = 0.756  # Probability of mating (crossover)
     mut_prob = 0.074  # Probability of mutating
-    n_generations = 100  # Number of generations 50
+    n_generations = 500  # Number of generations 50
     tournsize = 5
     sigma_gausian = 0.57
     alpha = 0.42
@@ -260,15 +260,17 @@ def main():
 
     # run the best found solution in the previous experiment, for 3 games
     # IMPORTANT to run graphics set HEADLESS to FALSE
-    elif program_name == "run_solution_3":
+    elif program_name == "run_solution_8_enemies":
         bsol = np.loadtxt(experiment_name + '/best.txt')
-        print('\n RUNNING SAVED BEST SOLUTION 3 EXPERIMENTS\n')
-        env.update_parameter('speed', 'normal')
+        print('\n RUNNING SAVED BEST SOLUTION 8 ENEMIES\n')
+        env.update_parameter('speed', 'fastest')
         levellist = [1,2,3,4,5,6,7,8]
         for i in levellist:
+            print("hoi")
             env.update_parameter('enemies', [i])
 
             fitness, playerlife, enemylife, gameruntime = simulation_indu(env, bsol)
+            print("hoi2")
 
             print(f"level: {i} \nfitness: {fitness} \nplayerlife: {playerlife}\nenemylife: {enemylife}\ngameruntime: {gameruntime}")
 
@@ -307,8 +309,8 @@ def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_gener
     toolbox.register("evaluate", evaluate_individual)
 
     # register the crossover and mutation functions
-    toolbox.register("mate", tools.cxTwoPoint)  # Two-point crossover      #TODO change recombination function
-   # toolbox.register("mate", tools.cxBlend, alpha=alpha)
+   # toolbox.register("mate", tools.cxTwoPoint)  # Two-point crossover      #TODO change recombination function
+    toolbox.register("mate", tools.cxBlend, alpha=alpha)
 
     toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=sigma_gausian, indpb=mut_prob)  # Gaussian mutation
   #  toolbox.register("mutate", tools.mutShuffleIndexes, indpb=0.05)  # Gaussian mutation
