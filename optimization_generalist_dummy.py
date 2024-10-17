@@ -69,7 +69,7 @@ def main():
         os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 
-    experiment_name = 'test_blend_all_mees' #TODO Change name for your experiment
+    experiment_name = 'test_blend_all_mees2' #TODO Change name for your experiment
     if not os.path.exists(experiment_name):
         os.makedirs(experiment_name)
 
@@ -86,8 +86,10 @@ def main():
     alpha = 0.78
 
     # program options
-    run_times = 20
+    run_times = 5
     program_name = "run_experiment"
+    insert_seed = False
+
 
  #   random.seed(43)
 
@@ -121,7 +123,7 @@ def main():
             # Run the EA a few times and get the max for the stocastic nature of the EA. Take the maximum fitness and use that
             for i in range(times):
                 logbook, current_best_solution, best_fitness = run_ea(
-                    env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize, sigma_gausian,alpha, pool
+                    env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize, sigma_gausian,alpha, pool, insert_seed
                 )
                 if best_fitness >= overall_best_fitness:
                     overall_best_fitness = best_fitness
@@ -187,12 +189,12 @@ def main():
         best_fitness_all = 0
 
         # register the parallelized map function with the toolbox
-        toolbox = run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize, sigma_gausian, alpha, pool)
+        toolbox = run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize, sigma_gausian, alpha, pool, insert_seed)
 
         # runs ea run_times times
         for run in range(run_times):
             print(f"Running simulation {run + 1}/{run_times}")
-            logbook, current_best_individual, best_fitness= run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize, sigma_gausian, alpha, pool)
+            logbook, current_best_individual, best_fitness= run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize, sigma_gausian, alpha, pool, insert_seed)
             if best_fitness > best_fitness_all:
                 best_fitness_all = best_fitness
                 best_individual = current_best_individual
@@ -254,7 +256,6 @@ def main():
         sys.exit(0)
 
     # run the best found solution in the previous experiment, and give the indipendend statistics for all enemies
-    # IMPORTANT to run graphics set HEADLESS to FALSE
     elif program_name == "run_solution_8_enemies":
 
         # don't need multiprocessing for this so close the pool
@@ -268,8 +269,8 @@ def main():
         env.update_parameter('multiplemode', 'no')
         levellist = [1,2,3,4,5,6,7,8]
 
-        print(f"{'Generation':<12} {'Fitness':<10} {'PlayerLife':<12} {'EnemyLife':<10} {'GameRuntime':<12}")
-        print("=" * 58)  # Divider line for neatness
+        print(f"{'Level':<12} {'Fitness':<10} {'PlayerLife':<12} {'EnemyLife':<10} {'GameRuntime':<12}")
+        print("=" * 58)
 
         for i in levellist:
             env.update_parameter('enemies', [i])
@@ -286,7 +287,7 @@ def main():
     pool.join()
 
 
-def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize, sigma_gausian, alpha, pool):
+def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize, sigma_gausian, alpha, pool, insert_seed):
 
     # create enviroment
     env = create_environment()
@@ -344,6 +345,15 @@ def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_gener
     record = stats.compile(population)
     logbook.record(gen=0, nevals=len(population), **record)
     print(logbook.stream)
+
+    # insert a seed to use previously found best solution
+    if insert_seed == True:
+
+        seed_solution = np.loadtxt('seed/best.txt')
+        seed_individual = creator.Individual(seed_solution)
+        seed_individual.fitness.values = toolbox.evaluate(seed_individual)
+        population.append(seed_individual)
+
 
     # evolutionary algorithm
     for gen in range(1, n_generations):
