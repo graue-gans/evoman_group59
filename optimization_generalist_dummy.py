@@ -39,7 +39,7 @@ def create_environment():
                        enemymode="static",
                        level=2,
                        speed="fastest",
-                       visuals=False,
+                       visuals=True,
                        randomini="no")
 # runs simulation
 def simulation(env,x):
@@ -64,12 +64,12 @@ def evaluate_individual(individual):
 
 def main():
     # choose this for not using visuals and thus making experiments faster
-    headless = True
+    headless = False
     if headless:
         os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 
-    experiment_name = 'test_blend_all_mees2' #TODO Change name for your experiment
+    experiment_name = 'test_blend_all_mees6' #TODO Change name for your experiment
     if not os.path.exists(experiment_name):
         os.makedirs(experiment_name)
 
@@ -80,18 +80,19 @@ def main():
     npop = 200 #153
     cx_prob = 0.885  # Probability of mating (crossover)
     mut_prob = 0.0474  # Probability of mutating
-    n_generations = 500  # Number of generations 50
+    n_generations = 1000  # Number of generations 50
     tournsize = 4
     sigma_gausian = 0.876
     alpha = 0.78
 
     # program options
-    run_times = 5
-    program_name = "run_experiment"
-    insert_seed = False
+    run_times = 1
+    program_name = "run_solution"
+    insert_seed = True
 
 
  #   random.seed(43)
+
 
 
     env = create_environment()
@@ -187,9 +188,6 @@ def main():
         all_std_fitness = np.zeros((run_times, n_generations))
         all_max_fitness = np.zeros((run_times, n_generations))
         best_fitness_all = 0
-
-        # register the parallelized map function with the toolbox
-        toolbox = run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_generations, tournsize, sigma_gausian, alpha, pool, insert_seed)
 
         # runs ea run_times times
         for run in range(run_times):
@@ -350,6 +348,26 @@ def run_ea(env, n_hidden_neurons, dom_l, dom_u, npop, cx_prob, mut_prob, n_gener
     if insert_seed == True:
 
         seed_solution = np.loadtxt('seed/best.txt')
+        seed_individual = creator.Individual(seed_solution)
+        seed_individual.fitness.values = toolbox.evaluate(seed_individual)
+        population.append(seed_individual)
+
+        seed_solution = np.loadtxt('seed/best2.txt')
+        seed_individual = creator.Individual(seed_solution)
+        seed_individual.fitness.values = toolbox.evaluate(seed_individual)
+        population.append(seed_individual)
+
+        seed_solution = np.loadtxt('seed/best3.txt')
+        seed_individual = creator.Individual(seed_solution)
+        seed_individual.fitness.values = toolbox.evaluate(seed_individual)
+        population.append(seed_individual)
+
+        seed_solution = np.loadtxt('seed/best4.txt')
+        seed_individual = creator.Individual(seed_solution)
+        seed_individual.fitness.values = toolbox.evaluate(seed_individual)
+        population.append(seed_individual)
+
+        seed_solution = np.loadtxt('seed/59.txt')
         seed_individual = creator.Individual(seed_solution)
         seed_individual.fitness.values = toolbox.evaluate(seed_individual)
         population.append(seed_individual)
